@@ -22,40 +22,36 @@ function App() {
 
   const regions = ["USA", "Germany", "Norway", "Russia"];
   let finalEntries = [];
-
   faker.seed(Number(seed));
 
   const newFakeEntry = () => {
-    const entry = (phoneFormat) => {
-      const zip = faker.datatype.number({ max: 10 });
+    const entry = () => {
+      const city = faker.datatype.number({ max: 10 });
 
       return new fakeEntry(
         faker.datatype.uuid(),
         faker.name.fullName(),
-        `${zip >= 7 ? faker.address.zipCode() : ""} ${faker.address.streetAddress(true)}`,
-        faker.phone.number(phoneFormat)
+        `${city >= 7 ? `${faker.address.cityName()},` : ""}  ${faker.address.streetAddress(faker.datatype.boolean())}`,
+        faker.phone.number()
       );
     };
 
     if (region === "USA") {
       faker.setLocale("en_US");
-      return entry("+1 (###) ###-####");
     }
 
     if (region === "Germany") {
       faker.setLocale("de");
-      return entry("+49 (##) ####-####");
     }
 
     if (region === "Norway") {
       faker.setLocale("nb_NO");
-      return entry("+47 9#-##-##-##");
     }
 
     if (region === "Russia") {
       faker.setLocale("ru");
-      return entry("+7 ###-###-##-##");
     }
+    return entry();
   };
 
   const createFakeEntries = (entriesCount = 21) => {
@@ -67,7 +63,7 @@ function App() {
 
     const removeCharacter = () => {
       const lastIteration = iterations[iterations.length - 1];
-      const charToChange = faker.datatype.number({ max: str.length });
+      const charToChange = faker.datatype.number({ max: iterations[iterations.length - 1].length });
 
       const updatedString = lastIteration.substring(0, charToChange - 1) + lastIteration.substring(charToChange);
       iterations.push(updatedString);
@@ -120,18 +116,38 @@ function App() {
       const iterAddress = [el.address];
       const iterPhone = [el.phone];
 
-      for (let i = 0; i < errorCount; i++) {
-        const lastIterationID = iterID[iterID.length - 1];
-        const lastIterationName = iterName[iterName.length - 1];
-        const lastIterationAddress = iterAddress[iterAddress.length - 1];
-        const lastIterationPhone = iterPhone[iterPhone.length - 1];
-        const fieldToChange = faker.datatype.number({ max: 3 });
-        if (lastIterationName.length <= 10) iterName.push(lastIterationName + faker.random.alpha(1));
-        if (fieldToChange === 0) iterID.push(scrambleString(lastIterationID, "id").substring(0, 40));
-        if (fieldToChange === 1) iterName.push(scrambleString(lastIterationName, "name").substring(0, 40));
-        if (fieldToChange === 2) iterAddress.push(scrambleString(lastIterationAddress, "address").substring(0, 40));
-        if (fieldToChange === 3) iterPhone.push(scrambleString(lastIterationPhone, "num").substring(0, 40));
+      let float = false;
+      let errors;
+
+      if (Number.isInteger(errorCount)) {
+        float = false;
+        errors = errorCount;
       }
+      if (!Number.isInteger(errorCount)) {
+        float = true;
+        errors = errorCount + 0.5;
+      }
+
+      const inroduceErrors = (count) => {
+        for (let i = 0; i < count; i++) {
+          const lastIterationID = iterID[iterID.length - 1];
+          const lastIterationName = iterName[iterName.length - 1];
+          const lastIterationAddress = iterAddress[iterAddress.length - 1];
+          const lastIterationPhone = iterPhone[iterPhone.length - 1];
+          const fieldToChange = faker.datatype.number({ max: 3 });
+
+          if (fieldToChange === 0) iterID.push(scrambleString(lastIterationID, "id").substring(0, 40));
+          if (fieldToChange === 1) iterName.push(scrambleString(lastIterationName, "name").substring(0, 40));
+          if (fieldToChange === 2) iterAddress.push(scrambleString(lastIterationAddress, "address").substring(0, 40));
+          if (fieldToChange === 3) iterPhone.push(scrambleString(lastIterationPhone, "num").substring(0, 40));
+        }
+      };
+
+      if (float) {
+        const rndm = faker.datatype.boolean();
+        rndm ? inroduceErrors(errors) : inroduceErrors(errors - 1);
+      }
+      if (!float) inroduceErrors(errors);
 
       el.id = iterID[iterID.length - 1];
       el.fullName = iterName[iterName.length - 1];
@@ -146,24 +162,22 @@ function App() {
 
   const renderEntries = () => {
     for (let i = 0; i < pages; i++) {
-      finalEntries.push(...addErrors(createFakeEntries()));
+      finalEntries.push(...createFakeEntries());
     }
 
-    return finalEntries;
+    return addErrors(finalEntries);
   };
 
   const regionHandler = (e) => {
-    console.log(e.currentTarget.value);
     setRegion(e.currentTarget.value);
   };
 
   const errorNumberHandler = (e) => {
-    console.log(e.currentTarget.value);
-    setErrorCount(e.currentTarget.value);
+    setErrorCount(Number(e.currentTarget.value));
   };
 
   const errorSliderHandler = (e) => {
-    setErrorCount(e.currentTarget.value);
+    setErrorCount(Number(e.currentTarget.value));
   };
 
   const seedHandler = (e) => {

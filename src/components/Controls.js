@@ -26,11 +26,19 @@ export const Controls = (props) => {
           <label className='errors-select-label' htmlFor='errors-slider'>
             Select number of errors per entry:
           </label>
-          <input id='errors-number' type='number' value={props.errorCount} onChange={props.errorNumberHandler} />
+          <input
+            id='errors-number'
+            type='number'
+            step={0.5}
+            min='0'
+            max='1000'
+            value={props.errorCount}
+            onChange={props.errorNumberHandler}
+          />
           <input
             id='errors-slider'
             type='range'
-            min='1'
+            min='0'
             max='1000'
             value={props.errorCount}
             onChange={props.errorSliderHandler}
